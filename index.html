@@ -1059,7 +1059,7 @@ function adsHTML(list, showProd){
     const icon=`<svg viewBox="0 0 24 24" aria-hidden="true">${vid?'<path d="M8 5.5v13l10.5-6.5z"/>':'<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 16l-5-5-8 8"/>'}</svg>`;
     const img=a.thumb?`<img src="${esc(a.thumb)}" alt="" loading="lazy" onerror="this.remove();this.parentNode&&this.parentNode.classList.remove('has-img')">`:'';
     return `<article class="ad">
-      <div class="ad-thumb ${vid?'vid':'img'} ${a.thumb?'has-img':''}">${icon}${img}<span class="ad-rank">${i+1}º</span><span class="ad-type">${vid?'Vídeo':'Imagem'}</span></div>
+      <div class="ad-thumb ${vid?'vid':'img'} ${a.thumb?'has-img':''}" ${vpAttrs(a)}>${icon}${img}<span class="ad-rank">${i+1}º</span><span class="ad-type">${vid?'Vídeo':'Imagem'}</span></div>
       <div class="ad-body">${showProd?`<span class="ad-prod">${esc(lab(a.campaign))}</span>`:''}<h3>${esc(title)}</h3>
         <div class="ad-nums"><span><b>${a.leads}</b> ${a.leads===1?'lead':'leads'}</span><span><b>${brl(a.spend/a.leads,2)}</b> por lead</span></div>
         ${a.link?`<a class="ad-link" href="${esc(a.link)}" target="_blank" rel="noopener">Ver anúncio <span aria-hidden="true">↗</span></a>`:''}</div></article>`; }).join('');
@@ -1398,6 +1398,63 @@ fetch('metrics.json?t='+Date.now(),{cache:'no-store'}).then(r=>{ if (!r.ok) thro
   let saved=null; try{ saved=localStorage.getItem('dash-mode'); }catch(e){}
   apply(saved==='light'?'light':'dark');
   btn.addEventListener('click',()=>{ const m=root.dataset.mode==='light'?'dark':'light'; apply(m); try{ localStorage.setItem('dash-mode',m); }catch(e){} });
+})();
+</script>
+
+<!-- ===== Player de vídeo dos anúncios (padrão LUZIAC) =====
+     Tocar no anúncio abre o vídeo do próprio post do Instagram dentro do painel; a prévia do Meta
+     fica como alternativa. Os links vêm do metrics.json (ig = post do Instagram, link = prévia do Meta). -->
+<style>
+.ad-thumb.vp-on{ cursor:pointer; }
+.ad-thumb.vp-on::after{ content:""; position:absolute; left:50%; top:50%; width:46px; height:46px; transform:translate(-50%,-50%); border-radius:50%;
+  background:rgba(13,13,14,.62) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M8 5v14l11-7z'/%3E%3C/svg%3E") 55% 50%/20px no-repeat;
+  border:1px solid rgba(255,255,255,.25); transition:transform .2s ease; z-index:2; }
+.ad-thumb.vp-on:not(.vp-vid)::after{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7'/%3E%3C/svg%3E"); background-position:50% 50%; background-size:18px; opacity:0; }
+.ad-thumb.vp-on:not(.vp-vid):hover::after, .ad-thumb.vp-on:not(.vp-vid):focus-visible::after{ opacity:1; }
+.ad-thumb.vp-on:hover::after, .ad-thumb.vp-on:focus-visible::after{ transform:translate(-50%,-50%) scale(1.08); }
+.vp-modal{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.78); display:grid; place-items:center; padding:16px; }
+.vp-modal[hidden]{ display:none; }
+.vp-box{ background:#171718; color:#F5F5F7; border:1px solid rgba(255,255,255,.13); border-radius:14px;
+  width:min(420px,100%); max-height:calc(100vh - 32px); display:flex; flex-direction:column; overflow:hidden; font:inherit; }
+.vp-h{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.07); }
+.vp-h b{ font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vp-x{ flex:none; border:0; background:#2A2A2C; color:inherit; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:18px; line-height:1; }
+.vp-frame{ flex:1; min-height:0; overflow:auto; background:#fff; }
+.vp-frame iframe{ width:100%; height:640px; border:0; display:block; }
+.vp-frame img{ width:100%; display:block; }
+.vp-f{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid rgba(255,255,255,.07); flex-wrap:wrap; }
+.vp-btn{ display:inline-flex; align-items:center; border:1px solid rgba(255,255,255,.13); background:transparent; color:inherit; border-radius:8px; padding:7px 12px; font-size:13px; text-decoration:none; }
+.vp-btn.primary{ background:var(--pink,var(--accent,#FB2576)); border-color:var(--pink,var(--accent,#FB2576)); color:#fff; font-weight:600; }
+</style>
+<div class="vp-modal" id="vp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="vp-title">
+  <div class="vp-box">
+    <div class="vp-h"><b id="vp-title"></b><button type="button" class="vp-x" id="vp-close" aria-label="Fechar">×</button></div>
+    <div class="vp-frame" id="vp-frame"></div>
+    <div class="vp-f"><a class="vp-btn primary" id="vp-meta" target="_blank" rel="noopener">Abrir prévia do anúncio</a><a class="vp-btn" id="vp-ig" target="_blank" rel="noopener">Ver no Instagram</a></div>
+  </div>
+</div>
+<script>
+(function(){
+  const q=s=>document.getElementById(s), e=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  window.vpAttrs = a => (a&&(a.ig||a.link)) ? `data-vp-ig="${e(a.ig||'')}" data-vp-link="${e(a.link||'')}" data-vp-title="${e(a.name||'Anúncio')}" data-vp-thumb="${e(a.thumb||'')}" role="button" tabindex="0" aria-label="Assistir ao anúncio ${e(a.name||'')}"` : '';
+  const embed=u=>{ const m=(u||'').match(/instagram\.com\/(?:p|reel|tv)\/([^/?#]+)/); return m?`https://www.instagram.com/p/${m[1]}/embed/`:null; };
+  let last=null;
+  function open(t){
+    last=t; const ig=t.dataset.vpIg, link=t.dataset.vpLink, src=embed(ig);
+    q('vp-title').textContent=t.dataset.vpTitle||'Anúncio';
+    q('vp-frame').innerHTML=src?`<iframe src="${e(src)}" title="Vídeo do anúncio" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+      :(t.dataset.vpThumb?`<img src="${e(t.dataset.vpThumb)}" alt="">`:'');
+    const m=q('vp-meta'), i=q('vp-ig'); m.hidden=!link; if(link) m.href=link; i.hidden=!ig; if(ig) i.href=ig;
+    q('vp-modal').hidden=false; q('vp-close').focus();
+  }
+  function close(){ q('vp-modal').hidden=true; q('vp-frame').innerHTML=''; if(last) last.focus(); }
+  const mark=()=>document.querySelectorAll('.ad-thumb[data-vp-link],.ad-thumb[data-vp-ig]').forEach(t=>{ if(t.dataset.vpIg||t.dataset.vpLink){ t.classList.add('vp-on'); const ty=t.querySelector('.ad-type'); t.classList.toggle('vp-vid', !ty || /v[ií]deo/i.test(ty.textContent)); } });
+  new MutationObserver(mark).observe(document.body,{childList:true,subtree:true}); mark();
+  document.addEventListener('click',ev=>{ const t=ev.target.closest('.ad-thumb.vp-on'); if(t){ ev.preventDefault(); open(t); return; }
+    if(ev.target.id==='vp-modal'||ev.target.closest('#vp-close')) close(); });
+  document.addEventListener('keydown',ev=>{ const t=ev.target.closest&&ev.target.closest('.ad-thumb.vp-on');
+    if(t&&(ev.key==='Enter'||ev.key===' ')){ ev.preventDefault(); open(t); }
+    else if(ev.key==='Escape'&&!q('vp-modal').hidden) close(); });
 })();
 </script>
 </body>

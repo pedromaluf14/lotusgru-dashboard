@@ -170,7 +170,7 @@ def main() -> int:
                            recent_from, today_s)
 
         ad_fields = [GROUP, "ad_id", "ad_name", "thumbnail_url",
-                     "ad_preview_shareable_link", "spend", LEAD_FIELD]
+                     "ad_preview_shareable_link", "instagram_permalink_url", "spend", LEAD_FIELD]
         ad_rows = {"last7": windsor(api_key, ad_fields, last7[0], last7[1]),
                    "month": windsor(api_key, ad_fields, month[0], month[1])}
     except WindsorError as e:
@@ -227,7 +227,7 @@ def main() -> int:
                 continue
             k = (c, name) if by_set else name
             a = ads.setdefault(k, {"campaign": c if by_set else "", "name": name, "leads": 0, "spend": 0.0,
-                                           "_best": -1, "link": None, "_thumb": None, "_id": None})
+                                           "_best": -1, "link": None, "ig": None, "_thumb": None, "_id": None})
             a.setdefault("_sets", set()).add(c)
             if not by_set:   # anúncio somado entre conjuntos: mostra o conjunto, ou "N conjuntos"
                 a["campaign"] = c if len(a["_sets"]) == 1 else f"{len(a['_sets'])} conjuntos"
@@ -237,6 +237,7 @@ def main() -> int:
             if sp > a["_best"]:
                 a["_best"] = sp
                 a["link"] = r.get("ad_preview_shareable_link") or a["link"]
+                a["ig"] = r.get("instagram_permalink_url") or a["ig"]  # post do Instagram: o painel toca o vídeo
                 a["_thumb"] = r.get("thumbnail_url") or a["_thumb"]
                 a["_id"] = r.get("ad_id")
         return [a for a in ads.values() if a["leads"] > 0]
@@ -248,7 +249,7 @@ def main() -> int:
         if thumb:
             keep_files.add(os.path.basename(thumb))
         return {"campaign": a["campaign"], "name": a["name"], "leads": a["leads"],
-                "spend": round(a["spend"], 2), "link": a["link"], "thumb": thumb}
+                "spend": round(a["spend"], 2), "link": a["link"], "ig": a["ig"], "thumb": thumb}
 
     rank = lambda xs: sorted(xs, key=lambda a: (-a["leads"], a["spend"]))
     top_ads = [publish(a) for a in rank(group_ads(ad_rows["last7"], by_set=False))[:TOP_ADS]]
