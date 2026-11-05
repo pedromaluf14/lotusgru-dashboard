@@ -48,7 +48,7 @@ button,input,select{ font:inherit; color:inherit; }
 /* barra de navegação */
 .nav{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
 .lopes{ display:inline-flex; align-items:baseline; gap:10px; }
-.lopes img{ height:30px; width:auto; display:block; }
+.lopes img{ height:44px; width:auto; display:block; }
 .wordmark{ font-size:24px; font-weight:800; letter-spacing:.32em; color:var(--ink); line-height:1; }
 .wordmark-sub{ font-size:10.5px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; }
 .tabs{ display:flex; gap:4px; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:10px; padding:4px; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
@@ -274,7 +274,7 @@ footer{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; fo
 }
 @media (max-width:640px){
   body{ padding-inline:14px; }
-  .nav{ gap:10px; } .lopes img{ height:24px; } .wordmark{ font-size:20px; } .wordmark-sub{ display:none; } .by{ display:none; }
+  .nav{ gap:10px; } .lopes img{ height:36px; } .wordmark{ font-size:20px; } .wordmark-sub{ display:none; } .by{ display:none; }
   .hero{ padding-top:22px; }
   .kpi .value{ font-size:20px; }
   .kpis-3{ grid-template-columns:1fr 1fr; } .kpis-3 > .kpi:first-child{ grid-column:1/-1; }
@@ -439,7 +439,7 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
 <div class="wrap">
 
   <header class="nav">
-    <span class="lopes" aria-label="LOTUS"><span class="wordmark">LOTUS</span><span class="wordmark-sub mono">condomínio</span></span>
+    <span class="lopes"><img src="assets/logo-lotus.png" alt="Condomínio LOTUS" class="logo-dark"><img src="assets/logo-lotus-escuro.png" alt="Condomínio LOTUS" class="logo-light"></span>
     <nav class="tabs" role="tablist">
       <button class="tab-btn active" role="tab" aria-selected="true" data-tab="geral">Visão geral</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="produtos">Conjuntos</button>
