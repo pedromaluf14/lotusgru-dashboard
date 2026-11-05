@@ -429,6 +429,15 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
 .ld-copy:hover{ color:var(--ink); border-color:var(--pink); }
 .ld-fb{ grid-column:1/-1; margin:2px 0 0; background:var(--card-2); border-radius:8px; padding:10px 12px; font-size:13.5px; color:var(--ink-soft); white-space:pre-wrap; overflow-wrap:anywhere; }
 .ld-meta{ grid-column:1/-1; font-size:11.5px; color:var(--muted); }
+.fbr-list{ display:flex; flex-direction:column; }
+.fbr-item{ display:grid; grid-template-columns:150px minmax(0,1fr); gap:4px 18px; padding:13px 4px; border-top:1px solid var(--line); }
+.fbr-item:first-child{ border-top:0; padding-top:2px; }
+.fbr-who{ display:flex; flex-direction:column; gap:5px; align-items:flex-start; min-width:0; }
+.fbr-who b{ font-weight:600; font-size:14px; overflow-wrap:anywhere; }
+.fbr-who small{ font-size:11.5px; color:var(--muted); }
+.fbr-text{ margin:0; font-size:13.5px; color:var(--ink-soft); white-space:pre-wrap; overflow-wrap:anywhere; align-self:center; }
+.fbr-text.none{ color:var(--muted); font-style:italic; }
+@media (max-width:640px){ .fbr-item{ grid-template-columns:1fr; } }
 @media (max-width:900px){ .ld-layout{ grid-template-columns:1fr; } .ld-form{ position:static; } }
 [data-mode="light"] .ld-temp .seg-btn[aria-checked="true"]:not([data-t="quente"]){ background:var(--ink); border-color:var(--ink); color:#fff; }
 .ld-temp .seg-btn[aria-checked="true"]:not([data-t="quente"]){ background:#fff; border-color:#fff; color:#111; }
@@ -444,7 +453,7 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
       <button class="tab-btn active" role="tab" aria-selected="true" data-tab="geral">Visão geral</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="produtos">Conjuntos</button>
       <button class="tab-btn" role="tab" aria-selected="false" data-tab="google">Google Ads</button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-tab="leads">Leads da corretora</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="leads">Feedback comercial</button>
     </nav>
     <div class="nav-right">
       <span class="by mono">by <img src="assets/logo-luziac-branco.png" alt="LUZIAC marketing imobiliário" class="luziac logo-dark"><img src="assets/logo-luziac.png" alt="LUZIAC marketing imobiliário" class="luziac logo-light"></span>
@@ -514,6 +523,13 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
       </div>
       <div class="hub-bar" id="hub-bar" aria-hidden="true"><span class="hb-m"></span><span class="hb-g"></span></div>
       <p class="ads-note">Leads do Meta = formulários preenchidos. Conversões do Google = <span id="hub-conv-name">ação de conversão da conta</span>, que mede clique no botão, não formulário. Por isso o total soma os dois, mas eles não são a mesma coisa.</p>
+    </section>
+
+    <section class="card vg-all" id="fb-recent" hidden>
+      <div class="card-h"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span>
+        <div><h2>Últimos feedbacks comerciais</h2><span class="card-sub">O retorno da corretora sobre os leads atendidos mais recentes</span></div></div>
+      <div class="fbr-list" id="fbr-list"></div>
+      <button type="button" class="more" id="fbr-more">Ver todos os feedbacks <span aria-hidden="true">→</span></button>
     </section>
 
     <section class="card">
@@ -676,10 +692,10 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
     </section>
   </div>
 
-  <!-- ===== LEADS DA CORRETORA ===== -->
+  <!-- ===== FEEDBACK COMERCIAL ===== -->
   <div class="tab-panel" data-panel="leads" role="tabpanel">
     <section class="hero hero-sm">
-      <span class="tag mono"><span class="v">ATENDIMENTO</span>Leads registrados pela corretora<span class="live"></span></span>
+      <span class="tag mono"><span class="v">FEEDBACK COMERCIAL</span>Leads atendidos pela corretora<span class="live"></span></span>
       <h1 class="hero-title sm">Cada contato,<br><span class="soft">com o retorno de quem atendeu.</span></h1>
       <div class="kpis kpis-3">
         <div class="kpi glass"><span class="label mono">LEADS REGISTRADOS</span><span class="value mono" id="ld-total">—</span><span class="delta"><span class="prev" id="ld-total-s"></span></span></div>
@@ -742,7 +758,7 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
    Lê metrics.json (Meta Ads e Google Ads via Windsor.ai), gravado de hora em hora pelo GitHub Action.
    Meta: lead = "Leads (formulário)", CPL = investimento ÷ leads do período.
    Google: conversões da conta (hoje, a ação "Botão CTA").
-   Leads da corretora: planilha Google, lida e gravada pelo Apps Script em LEADS_API. */
+   Feedback comercial: planilha Google, lida e gravada pelo Apps Script em LEADS_API. */
 
 /* Conjuntos ativos: nome EXATO do conjunto de anúncios no Meta (campanha
    "[luziac] [leads] campanha de cadastro Lotus"). Conjunto que sair daqui continua somando na
@@ -1000,7 +1016,7 @@ function renderVG(){
   renderSec('vg', m, o); $('#vg-sec-sub').textContent=(isAll?'Todos os conjuntos':e.label)+' · '+perText(vgPeriod,V.R).toLowerCase()+(o?' · variação vs. período anterior':'');
   $('#vg-chart-sub').textContent = (isAll?'Todos os conjuntos':e.label)+' · '+fRange(V.days[0],V.days[V.days.length-1])+(V.sel?' · faixa destacada = período escolhido':'');
   $('#news').classList.toggle('off', !isAll);
-  $$('.vg-all').forEach(x=>x.hidden=!isAll);
+  $$('.vg-all').forEach(x=>x.hidden=!isAll || (x.id==='fb-recent' && !x.dataset.ready));
   $('#ads').hidden = !M.adsByCampaign && !(isAll && vgPeriod==='cur');
   renderAds(e);
   if (isAll){ renderHub(); renderRank(); renderWho(); }
@@ -1256,7 +1272,27 @@ function init(data){
   renderSaldo(); renderNews(); renderAds(); renderVG(); renderProdList(); renderProdDetail(); renderGoogle();
 }
 $$('.tab-btn').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
-/* =============== LEADS DA CORRETORA (planilha Google via Apps Script) ===============
+loadRecentFeedback();
+/* Visão geral: últimos 5 feedbacks, aberto para quem tem o link do painel.
+   O Apps Script devolve só o primeiro nome, a temperatura e o feedback (sem telefone e e-mail). */
+async function loadRecentFeedback(){
+  if (!LEADS_API) return;
+  try{
+    const r=await fetch(LEADS_API+'?action=recent',{cache:'no-store'}); if (!r.ok) return;
+    const res=await r.json(); const box=$('#fb-recent');
+    if (!res.ok || !Array.isArray(res.leads)){ box.hidden=true; return; }
+    const ago=d=>{ const t=new Date(d); if (isNaN(t)) return ''; const m=Math.round((Date.now()-t)/6e4);
+      return m<60?`há ${Math.max(m,1)} min`:m<1440?`há ${Math.round(m/60)} h`:t.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit'}); };
+    $('#fbr-list').innerHTML=res.leads.length?res.leads.map(l=>{ const t=(l.temperatura||'').toLowerCase(), cls=t==='sem contato'?'sem':t;
+      return `<div class="fbr-item"><div class="fbr-who"><b>${esc(l.nome||'Lead')}</b>${t?`<span class="ld-chip ${esc(cls)}">${esc(t)}</span>`:''}<small>${esc(ago(l.data))}${l.corretora?' · '+esc(l.corretora):''}</small></div>
+        <p class="fbr-text ${l.feedback?'':'none'}">${esc(l.feedback||'Sem feedback registrado.')}</p></div>`; }).join('')
+      : '<p class="empty">Nenhum feedback registrado ainda.</p>';
+    box.dataset.ready='1'; box.hidden=vgProduct!=='all';
+  }catch(e){}
+}
+$('#fbr-more').addEventListener('click',()=>{ setTab('leads'); scrollTo({top:0,behavior:'smooth'}); });
+
+/* =============== FEEDBACK COMERCIAL (planilha Google via Apps Script) ===============
    GET  LEADS_API?action=list&pin=…            → {ok, leads:[{id,data,nome,telefone,email,temperatura,feedback,corretora}]}
    POST LEADS_API  {action:'add', pin, lead}   → {ok, id}   (corpo text/plain para evitar preflight)
    O código (PIN) fica só no Apps Script; o painel guarda o que a pessoa digitou neste aparelho. */
@@ -1339,7 +1375,7 @@ $$('.tab-btn').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)))
       if (lead.corretora) LS.set('lotus-corretora',lead.corretora);
       leads.unshift({ ...lead, id:res.id, data:new Date().toISOString() }); render();
       ['#ld-nome','#ld-tel','#ld-email','#ld-fb'].forEach(x=>$(x).value=''); temp=''; $$('.ld-temp .seg-btn').forEach(x=>x.setAttribute('aria-checked','false'));
-      msg(m,'Lead salvo na planilha.','ok'); $('#ld-nome').focus();
+      msg(m,'Lead salvo na planilha.','ok'); $('#ld-nome').focus(); loadRecentFeedback();
     }catch(err){ msg(m,'Não foi possível salvar agora. Confira a internet e tente de novo.','err'); }
     finally{ $('#ld-save').disabled=false; }
   });

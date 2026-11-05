@@ -5,6 +5,8 @@
  * deste script, publicado como "App da Web".
  *
  *   GET  ?action=list&pin=CODIGO            → { ok, leads: [...] }
+ *   GET  ?action=recent                     → { ok, leads: [5 últimos] }  (aberto: só primeiro nome,
+ *                                              temperatura, feedback e quem atendeu; sem telefone e e-mail)
  *   POST { action:'add', pin, lead:{...} }  → { ok, id }
  *
  * O código de acesso fica nas Propriedades do script (chave PIN), nunca no painel
@@ -43,6 +45,7 @@ function texto_(v, max) {
 
 function doGet(e) {
   const p = (e && e.parameter) || {};
+  if (p.action === 'recent') return resposta_({ ok: true, leads: recentes_(5) });
   if (!codigoOk_(p.pin)) return resposta_({ ok: false, error: 'pin' });
   const linhas = aba_().getDataRange().getValues();
   linhas.shift(); // cabeçalho
@@ -57,6 +60,22 @@ function doGet(e) {
     corretora: String(r[7]),
   }));
   return resposta_({ ok: true, leads: leads });
+}
+
+/* Os últimos N leads para a Visão geral do painel: sem telefone, e-mail nem sobrenome. */
+function recentes_(n) {
+  const linhas = aba_().getDataRange().getValues();
+  linhas.shift();
+  return linhas.filter(r => r[0] !== '' && r[2] !== '')
+    .sort((a, b) => new Date(b[1]) - new Date(a[1]))
+    .slice(0, n)
+    .map(r => ({
+      data: r[1] instanceof Date ? r[1].toISOString() : String(r[1]),
+      nome: String(r[2]).trim().split(/\s+/)[0],
+      temperatura: String(r[5]),
+      feedback: String(r[6]).slice(0, 400),
+      corretora: String(r[7]),
+    }));
 }
 
 function doPost(e) {
