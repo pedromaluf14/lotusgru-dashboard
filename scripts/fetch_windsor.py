@@ -48,6 +48,44 @@ TOP_ADS_PER_CAMPAIGN = 6   # melhores anúncios de cada conjunto
 TZ = timezone(timedelta(hours=-3))  # America/Sao_Paulo
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "metrics.json")
+OUT_ENC = os.path.join(ROOT, "metrics.enc.json")
+PBKDF2_ITER = 250_000
+
+
+def encrypt_metrics(raw: bytes, password: str) -> dict:
+    """Criptografa os dados com a senha de gestor (AES-256-GCM, chave por PBKDF2-SHA256).
+
+    O navegador refaz a mesma derivação com a senha digitada e abre os dados (WebCrypto).
+    Sem a senha, o arquivo publicado é ilegível."""
+    import base64
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+    salt, iv = os.urandom(16), os.urandom(12)
+    key = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=PBKDF2_ITER).derive(password.encode("utf-8"))
+    ct = AESGCM(key).encrypt(iv, raw, None)  # texto cifrado + tag, no formato que o WebCrypto espera
+    b64 = lambda b: base64.b64encode(b).decode("ascii")
+    return {"v": 1, "kdf": "PBKDF2-SHA256", "iter": PBKDF2_ITER, "salt": b64(salt), "iv": b64(iv), "data": b64(ct)}
+
+
+def previous_metrics() -> dict:
+    """Último dado publicado (aberto ou criptografado), para manter o Google se ele falhar."""
+    if os.path.exists(OUT):
+        with open(OUT, encoding="utf-8") as f:
+            return json.load(f)
+    password = os.environ.get("PAINEL_SENHA", "").strip()
+    if password and os.path.exists(OUT_ENC):
+        import base64
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+        with open(OUT_ENC, encoding="utf-8") as f:
+            enc = json.load(f)
+        d = base64.b64decode
+        key = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=d(enc["salt"]), iterations=enc["iter"]).derive(password.encode("utf-8"))
+        return json.loads(AESGCM(key).decrypt(d(enc["iv"]), d(enc["data"]), None))
+    return {}
 ADS_DIR = os.path.join(ROOT, "assets", "ads")
 
 
@@ -303,8 +341,7 @@ def main() -> int:
     except WindsorError as e:
         print(f"::warning::Google Ads não atualizou ({e}); mantendo o último dado")
         try:
-            with open(OUT, encoding="utf-8") as f:
-                google = json.load(f).get("google")
+            google = previous_metrics().get("google")
         except Exception:
             google = None
 
@@ -320,9 +357,23 @@ def main() -> int:
         "adsByCampaign": ads_by_campaign,
         "google": google,
     }
-    with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"{len(daily_rows)} linhas diárias, {len(daily_out)} campanhas, {len(top_ads)} anúncios em metrics.json")
+    raw = json.dumps(out, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    password = os.environ.get("PAINEL_SENHA", "").strip()
+    if password:
+        # Painel protegido: publica só a versão criptografada e apaga a aberta.
+        with open(OUT_ENC, "w", encoding="utf-8") as f:
+            json.dump(encrypt_metrics(raw, password), f, separators=(",", ":"))
+        if os.path.exists(OUT):
+            os.remove(OUT)
+        dest = "metrics.enc.json (criptografado)"
+    else:
+        print("::warning::Secret PAINEL_SENHA não configurado: os dados ficam abertos em metrics.json")
+        with open(OUT, "wb") as f:
+            f.write(raw)
+        if os.path.exists(OUT_ENC):
+            os.remove(OUT_ENC)
+        dest = "metrics.json"
+    print(f"{len(daily_rows)} linhas diárias, {len(daily_out)} campanhas, {len(top_ads)} anúncios em {dest}")
     return 0
 
 

@@ -441,6 +441,25 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
 @media (max-width:900px){ .ld-layout{ grid-template-columns:1fr; } .ld-form{ position:static; } }
 [data-mode="light"] .ld-temp .seg-btn[aria-checked="true"]:not([data-t="quente"]){ background:var(--ink); border-color:var(--ink); color:#fff; }
 .ld-temp .seg-btn[aria-checked="true"]:not([data-t="quente"]){ background:#fff; border-color:#fff; color:#111; }
+/* ===== Área do gestor: dados de campanha protegidos por senha ===== */
+.tab-panel.locked{ position:relative; min-height:640px; }
+.tab-panel.locked > :not(.lock-card){ filter:blur(10px) saturate(.6); opacity:.55; pointer-events:none; user-select:none; }
+.lock-card{ display:none; }
+.tab-panel.locked > .lock-card{ display:flex; flex-direction:column; gap:14px; position:absolute; z-index:5; top:90px; left:50%; transform:translateX(-50%);
+  width:min(440px, calc(100% - 8px)); background:var(--card); border:1px solid var(--line-2); border-radius:14px; padding:26px 26px 22px; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+.lock-card .lk-ico{ width:40px; height:40px; border-radius:10px; display:grid; place-items:center; background:var(--pink-soft); color:var(--pink); }
+.lock-card .lk-ico svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.lock-card h2{ font-size:19px; font-weight:600; letter-spacing:-.01em; }
+.lock-card p{ margin:0; color:var(--ink-soft); font-size:13.5px; line-height:1.5; }
+.lock-card form{ display:flex; flex-direction:column; gap:10px; }
+.lock-card .lk-row{ display:flex; gap:8px; } .lock-card .lk-row .ld-input{ flex:1; min-width:0; }
+.lock-card .lk-remember{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); cursor:pointer; }
+.lock-card .lk-remember input{ accent-color:var(--pink); }
+.lock-card .lk-alt{ border-top:1px solid var(--line); padding-top:12px; font-size:12.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.lock-card .lk-alt button{ border:0; background:none; color:var(--ink); font:inherit; font-weight:600; cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:3px; }
+.lock-card .lk-alt button:hover{ color:var(--pink); }
+.gestor-out{ border:0; background:none; color:inherit; font:inherit; letter-spacing:inherit; cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:3px; }
+@media (max-width:640px){ .tab-panel.locked > .lock-card{ top:40px; padding:22px 18px 18px; } .lock-card .lk-row{ flex-direction:column; } }
 </style>
 </head>
 <body>
@@ -467,6 +486,17 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
 
   <!-- ===== VISÃO GERAL ===== -->
   <div class="tab-panel active" data-panel="geral" role="tabpanel">
+    <div class="lock-card" role="dialog" aria-labelledby="lk-h-geral">
+      <span class="lk-ico"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+      <h2 id="lk-h-geral">Área com dados sensíveis</h2>
+      <p>Investimento, custos e resultados das campanhas ficam visíveis só para a gestão. Digite sua senha de gestor para visualizar.</p>
+      <form class="lk-form" novalidate>
+        <div class="lk-row"><input class="ld-input lk-pass" id="lk-pass-geral" type="password" autocomplete="current-password" placeholder="Senha de gestor" aria-label="Senha de gestor"><button class="ld-btn" type="submit">Visualizar</button></div>
+        <label class="lk-remember"><input type="checkbox" class="lk-keep" id="lk-keep-geral" checked> Lembrar neste aparelho</label>
+        <p class="ld-msg lk-msg" role="status"></p>
+      </form>
+      <div class="lk-alt"><span>É da equipe comercial?</span><button type="button" class="lk-go-fb">Ir para Feedback comercial →</button></div>
+    </div>
     <section class="hero">
       <div class="hero-top">
         <span class="tag mono"><span class="v">META ADS</span>Painel de campanhas<span class="live"></span></span>
@@ -578,6 +608,17 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
 
   <!-- ===== CONJUNTOS ===== -->
   <div class="tab-panel" data-panel="produtos" role="tabpanel">
+    <div class="lock-card" role="dialog" aria-labelledby="lk-h-produtos">
+      <span class="lk-ico"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+      <h2 id="lk-h-produtos">Área com dados sensíveis</h2>
+      <p>Investimento, custos e resultados das campanhas ficam visíveis só para a gestão. Digite sua senha de gestor para visualizar.</p>
+      <form class="lk-form" novalidate>
+        <div class="lk-row"><input class="ld-input lk-pass" id="lk-pass-produtos" type="password" autocomplete="current-password" placeholder="Senha de gestor" aria-label="Senha de gestor"><button class="ld-btn" type="submit">Visualizar</button></div>
+        <label class="lk-remember"><input type="checkbox" class="lk-keep" id="lk-keep-produtos" checked> Lembrar neste aparelho</label>
+        <p class="ld-msg lk-msg" role="status"></p>
+      </form>
+      <div class="lk-alt"><span>É da equipe comercial?</span><button type="button" class="lk-go-fb">Ir para Feedback comercial →</button></div>
+    </div>
     <section class="hero hero-sm">
       <span class="tag mono"><span class="v" id="prod-count">—</span>Conjuntos ativos<span class="live"></span></span>
       <h1 class="hero-title sm">Cada conjunto,<br><span class="soft">em detalhe.</span></h1>
@@ -635,6 +676,17 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
 
   <!-- ===== GOOGLE ADS ===== -->
   <div class="tab-panel" data-panel="google" role="tabpanel">
+    <div class="lock-card" role="dialog" aria-labelledby="lk-h-google">
+      <span class="lk-ico"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+      <h2 id="lk-h-google">Área com dados sensíveis</h2>
+      <p>Investimento, custos e resultados das campanhas ficam visíveis só para a gestão. Digite sua senha de gestor para visualizar.</p>
+      <form class="lk-form" novalidate>
+        <div class="lk-row"><input class="ld-input lk-pass" id="lk-pass-google" type="password" autocomplete="current-password" placeholder="Senha de gestor" aria-label="Senha de gestor"><button class="ld-btn" type="submit">Visualizar</button></div>
+        <label class="lk-remember"><input type="checkbox" class="lk-keep" id="lk-keep-google" checked> Lembrar neste aparelho</label>
+        <p class="ld-msg lk-msg" role="status"></p>
+      </form>
+      <div class="lk-alt"><span>É da equipe comercial?</span><button type="button" class="lk-go-fb">Ir para Feedback comercial →</button></div>
+    </div>
     <section class="hero hero-sm">
       <span class="tag mono"><span class="v">GOOGLE ADS</span>Conta Condomínio Lotus<span class="live"></span></span>
       <h1 class="hero-title sm"><span class="grad" id="g-conv">—</span> <span id="g-conv-w">conversões</span><br><span class="soft" id="g-title-period">carregando…</span></h1>
@@ -751,7 +803,7 @@ textarea.ld-input{ min-height:96px; resize:vertical; font:inherit; }
     </div>
   </div>
 
-  <footer class="mono"><span>DADOS · META ADS E GOOGLE ADS VIA WINDSOR.AI · ATUALIZA DE HORA EM HORA</span><span id="foot-updated"></span></footer>
+  <footer class="mono"><span>DADOS · META ADS E GOOGLE ADS VIA WINDSOR.AI · ATUALIZA DE HORA EM HORA<span id="gestor-out-wrap" hidden> · <button type="button" class="gestor-out" id="gestor-out">SAIR DO MODO GESTOR</button></span></span><span id="foot-updated"></span></footer>
 </div>
 <div class="tip" id="tip" role="tooltip"></div>
 <script>/* ===== Painel de campanhas · LOTUS =====
@@ -1381,12 +1433,55 @@ $('#fbr-more').addEventListener('click',()=>{ setTab('leads'); scrollTo({top:0,b
   });
 })();
 
-fetch('metrics.json?t='+Date.now(),{cache:'no-store'}).then(r=>{ if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(data=>init(data)).catch(err=>{
-  console.error(err);
+/* =============== carregamento e área do gestor ===============
+   Com o secret PAINEL_SENHA no GitHub, o Action publica só metrics.enc.json (AES-GCM, chave por
+   PBKDF2-SHA256 a partir da senha). Visão geral, Meta Ads e Google Ads ficam borrados até a senha
+   abrir os dados. Sem o secret, o painel lê metrics.json aberto como antes. */
+const GESTOR_KEY='lotus-gestor';
+const gStore={ get:()=>{ try{ return localStorage.getItem(GESTOR_KEY)||''; }catch(e){ return ''; } },
+  set:v=>{ try{ localStorage.setItem(GESTOR_KEY,v); }catch(e){} }, del:()=>{ try{ localStorage.removeItem(GESTOR_KEY); }catch(e){} } };
+const LOCKED_PANELS=['geral','produtos','google'];
+function b64bytes(s){ const b=atob(s), u=new Uint8Array(b.length); for (let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
+async function decryptMetrics(enc, password){
+  const base=await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key=await crypto.subtle.deriveKey({ name:'PBKDF2', hash:'SHA-256', salt:b64bytes(enc.salt), iterations:enc.iter },
+    base, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+  const plain=await crypto.subtle.decrypt({ name:'AES-GCM', iv:b64bytes(enc.iv) }, key, b64bytes(enc.data));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+function setLocked(on){ LOCKED_PANELS.forEach(p=>$(`.tab-panel[data-panel="${p}"]`).classList.toggle('locked',on)); }
+function loadFail(){
   $('#vg-title-period').textContent='dados indisponíveis';
   $('.hero').insertAdjacentHTML('beforeend','<p class="load-err">Não foi possível carregar os dados agora. Tente atualizar a página em alguns minutos.</p>');
-});
+}
+function startLocked(enc){
+  setLocked(true);
+  $$('.lk-go-fb').forEach(b=>b.addEventListener('click',()=>{ setTab('leads'); scrollTo({top:0,behavior:'smooth'}); }));
+  $$('.lk-form').forEach(form=>form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const inp=form.querySelector('.lk-pass'), msgEl=form.querySelector('.lk-msg'), btn=form.querySelector('button[type=submit]');
+    const pw=inp.value; if (!pw){ msgEl.textContent='Digite a senha de gestor.'; msgEl.className='ld-msg lk-msg err'; inp.focus(); return; }
+    btn.disabled=true; msgEl.textContent='Abrindo…'; msgEl.className='ld-msg lk-msg';
+    try{
+      const data=await decryptMetrics(enc,pw);
+      if (form.querySelector('.lk-keep').checked) gStore.set(pw); else gStore.del();
+      unlock(data);
+    }catch(err){ msgEl.textContent='Senha incorreta. Confira e tente de novo.'; msgEl.className='ld-msg lk-msg err'; inp.select(); }
+    finally{ btn.disabled=false; }
+  }));
+  const saved=gStore.get();
+  if (saved) decryptMetrics(enc,saved).then(unlock).catch(()=>gStore.del());   /* senha trocada: pede de novo */
+}
+function unlock(data){
+  setLocked(false); $('#gestor-out-wrap').hidden=false;
+  try{ init(data); }catch(err){ console.error(err); loadFail(); }
+}
+$('#gestor-out').addEventListener('click',()=>{ gStore.del(); location.reload(); });
+
+fetch('metrics.enc.json?t='+Date.now(),{cache:'no-store'})
+  .then(r=>r.ok ? r.json().then(startLocked)
+    : fetch('metrics.json?t='+Date.now(),{cache:'no-store'}).then(r2=>{ if (!r2.ok) throw new Error(r2.status); return r2.json(); }).then(init))
+  .catch(err=>{ console.error(err); loadFail(); });
 
 /* luz que acompanha o mouse, só no topo */
 (function(){ const sky=$('#sky'); if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;

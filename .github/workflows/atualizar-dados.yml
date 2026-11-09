@@ -22,16 +22,21 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Instalar criptografia
+        run: pip install --quiet cryptography
+
       - name: Buscar dados no Windsor.ai (Meta + Google)
         env:
           WINDSOR_API_KEY: ${{ secrets.WINDSOR_API_KEY }}
+          PAINEL_SENHA: ${{ secrets.PAINEL_SENHA }}   # senha de gestor: com ela, os dados saem criptografados
         run: python scripts/fetch_windsor.py
 
       - name: Commitar dados se mudaram
         run: |
           git config user.name "painel-bot"
           git config user.email "painel-bot@users.noreply.github.com"
-          git add -A metrics.json assets/
+          # metrics.json (aberto) ou metrics.enc.json (criptografado): adiciona o que existir e registra o que foi apagado
+          for f in metrics.json metrics.enc.json assets; do git add -A -- "$f" 2>/dev/null || true; done
           if git diff --cached --quiet; then
             echo "Sem mudanças nos dados."
           else
